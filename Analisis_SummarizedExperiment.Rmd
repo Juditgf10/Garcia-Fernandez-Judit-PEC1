@@ -1,0 +1,108 @@
+---
+title: "Analisis SummarizedExperiment"
+author: "Judit García Fernández"
+date: "2024-11-06"
+output:
+  word_document: default
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+# Cargar librerías necesarias
+library(SummarizedExperiment)
+library(ggplot2)
+library(dplyr)
+
+# Cargar el objeto SummarizedExperiment
+load("C:/Users/judit/OneDrive/Escritorio/MÁSTER/3er SEMESTRE/ADO - Análisis de datos ómicos/Reto 1 - Las ómicas/PAC 1/S013_SummarizedExperiment.Rda")
+```
+
+## Descripción General de los Datos
+
+Esta sección proporciona una visión general del dataset, incluyendo su estructura y las principales variables.
+```{r}
+# Dimensiones del dataset
+dim(se)
+
+# Nombres de variables
+colnames(colData(se))
+```
+
+```{r}
+# Crear un subset con variables de interés
+selected_vars <- c("AGE", "GENDER", "PESO_T0", "bmi_T0", "GLU_T0", "HOMA_T0", "TG_T0", "COL_T0")
+data_subset <- assay(se, "counts")[, selected_vars]
+head(data_subset)
+```
+
+## Análisis Descriptivo
+
+En esta sección, se realiza un análisis descriptivo de las variables seleccionadas.
+```{r}
+# Seleccionar variables de interés y convertirlas a formato numérico (excepto GENDER)
+selected_vars <- c("AGE", "PESO_T0", "bmi_T0", "GLU_T0", "HOMA_T0", "TG_T0", "COL_T0")
+
+# Convertir `assay(se, "counts")` a data.frame y seleccionar columnas
+data_subset <- as.data.frame(assay(se, "counts")[, selected_vars])
+
+# Convertir cada columna de interés a numérica
+data_subset <- as.data.frame(lapply(data_subset, function(x) as.numeric(as.character(x))))
+
+# Agregar GENDER por separado como una columna de tipo character
+data_subset$GENDER <- as.character(assay(se, "counts")[, "GENDER"])
+
+# Verificar la estructura del nuevo data frame
+str(data_subset)
+
+```
+```{r}
+#Resumen estadístico
+summary(data_subset)
+```
+```{r}
+#Histogramas
+library(ggplot2)
+
+for (var in selected_vars) {
+  plot <- ggplot(data_subset, aes(x = !!sym(var))) + 
+    geom_histogram(binwidth = 5, fill = "blue", color = "black") +
+    labs(title = paste("Distribución de", var), x = var, y = "Frecuencia") +
+    theme_minimal()
+  
+  print(plot)  # Esto asegura que cada gráfico se muestre en el documento R Markdown
+}
+
+```
+
+
+```{r}
+# Gráfico de barras para variable categórica (ej. GENDER)
+ggplot(data_subset, aes(x = GENDER)) + 
+  geom_bar(fill = "purple") +
+  labs(title = "Distribución de Género", x = "Género", y = "Frecuencia")
+
+```
+
+```{r}
+# Comparar BMI entre géneros
+ggplot(data_subset, aes(x = GENDER, y = bmi_T0)) + 
+  geom_boxplot(fill = "lightblue") +
+  labs(title = "Distribución del IMC por Género", x = "Género", y = "IMC (bmi_T0)") +
+  theme_minimal()
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
